@@ -27,8 +27,8 @@
           <h3>Application de partage de marqueurs</h3>
         </div>
       </div>
-      <div v-else class="box home" key="home">
-        <hr />
+      <div v-else class="box home" key="home" style="margin-top: 1rem">
+        Prochainement...
       </div>
     </transition>
     <div class="footer">
@@ -38,6 +38,7 @@
           logo="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
           text="Se connecter avec Google"
           :event="loginWithGoogle"
+          :loading="loggingIn"
         />
       </transition>
     </div>
@@ -53,15 +54,26 @@ export default {
   name: "Menu",
   components: { LoginButton },
   props: ["mapData", "user"],
+  data: () => ({
+    loggingIn: false,
+  }),
   methods: {
     loginWithGoogle() {
+      this.loggingIn = true;
       const provider = new GoogleAuthProvider();
       const auth = getAuth();
 
-      signInWithPopup(auth, provider).then((result) => {
-        this.user.connected = true;
-        this.user.profile = result.user;
-      });
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          this.user.connected = true;
+          this.user.profile = result.user;
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          this.loggingIn = false;
+        });
     },
   },
   computed: {
