@@ -75,8 +75,11 @@ export default {
 <style lang="scss">
 @media screen and (max-width: 800px) {
   .menu {
+    position: absolute;
+    bottom: 0;
     width: calc(100% - 60px) !important;
     height: calc(50vh - 60px) !important;
+    max-height: 300px;
     margin-top: 50vh !important;
   }
 }
