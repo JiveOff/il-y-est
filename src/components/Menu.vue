@@ -9,7 +9,7 @@
           <font-awesome-icon :icon="mapPin" size="2x" />
           <div>
             <h3>Bienvenue,</h3>
-            <h2>{{ user.profile.displayName }}aaaaaaaaaaaaaaaaaaaaaaaaaaaa</h2>
+            <h2>{{ user.profile.displayName }}</h2>
           </div>
         </div>
         <div class="separator"></div>
