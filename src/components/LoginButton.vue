@@ -1,46 +1,101 @@
 <template>
-  <button class="button" @click="event">
-    <img class="logo" :src="logo" alt="Logo" />
-    <p class="text">{{ text }}</p>
+  <button
+    class="button"
+    :class="{ loading }"
+    @click="event"
+    :disabled="loading"
+  >
+    <div v-if="loading" class="loading">
+      <font-awesome-icon :icon="circle" size="2x" />
+    </div>
+    <div v-else>
+      <div class="logo">
+        <img :src="logo" alt="Logo" />
+      </div>
+      <p class="text">{{ text }}</p>
+    </div>
   </button>
 </template>
 
 <script>
+import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+
 export default {
   name: "Button",
-  props: ["logo", "text", "event"],
+  props: ["logo", "text", "event", "loading"],
+  computed: {
+    circle() {
+      return faCircleNotch;
+    },
+  },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .button {
-  border: 1px solid black;
+  border: 0;
   background: black;
-  display: flex;
-  align-items: center;
-  justify-content: left;
-  gap: 10px;
   border-radius: 10px;
   cursor: pointer;
   width: 100%;
+
+  height: 46px;
+
+  padding: 5px;
+
+  div {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    gap: 10px;
+    height: 100%;
+  }
+
+  .logo {
+    background: white;
+    border-radius: 7px;
+    width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .text {
+    max-height: 18px;
+    color: white;
+    text-align: center;
+    width: 100%;
+
+    font-family: "Rubik", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .loading {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: not-allowed;
+
+    svg {
+      animation: spin 1s linear infinite;
+    }
+  }
 }
 
-.logo {
-  width: 22px;
-  height: 22px;
-  padding: 8px 10px;
-  background: white;
-  border-radius: 7px;
-}
-
-.text {
-  max-height: 18px;
-  color: white;
-  text-align: center;
-  width: 100%;
-
-  font-family: "Rubik", sans-serif;
-  font-weight: 500;
-  font-size: 14px;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
