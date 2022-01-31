@@ -27,8 +27,8 @@
           <h3>Application de partage de marqueurs</h3>
         </div>
       </div>
-      <div v-else class="box home" key="home">
-        <hr />
+      <div v-else class="box home" key="home" style="margin-top: 1rem">
+        Prochainement...
       </div>
     </transition>
     <div class="footer">
