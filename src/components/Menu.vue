@@ -1,33 +1,57 @@
 <template>
   <div class="menu">
     <transition name="fade" mode="out-in">
-      <div v-if="!user.connected" class="connexion">
-        <h2>Il y est</h2>
-        <h3>Application de partage de carte</h3>
-        <hr />
-        <button class="g-button" @click="loginWithGoogle">
-          <img
-            class="g-logo"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
-            alt="Google Logo"
-          />
-          <p class="g-text">Connexion avec Google</p>
-        </button>
+      <div v-if="!user.connected" class="header" key="header">
+        <font-awesome-icon :icon="mapPin" size="2x" />
       </div>
-      <div v-else class="home">
-        <img :src="user.profile.photoURL" alt="Photo de profil" />
-        <h2>{{ user.profile.displayName }}</h2>
-        <h3>Application de partage de carte</h3>
+      <div v-else class="header connected" key="connected-header">
+        <div class="welcome">
+          <font-awesome-icon :icon="mapPin" size="2x" />
+          <div>
+            <h3>Bienvenue,</h3>
+            <h2>{{ user.profile.displayName }}aaaaaaaaaaaaaaaaaaaaaaaaaaaa</h2>
+          </div>
+        </div>
+        <div class="separator"></div>
+        <img
+          class="profile-picture extra-small"
+          :src="user.profile.photoURL"
+          alt="Photo de profil"
+        />
       </div>
     </transition>
+    <transition name="fade" mode="out-in">
+      <div v-if="!user.connected" class="box connexion" key="connexion">
+        <div>
+          <h2>Il y est</h2>
+          <h3>Application de partage de marqueurs</h3>
+        </div>
+      </div>
+      <div v-else class="box home" key="home">
+        <hr />
+      </div>
+    </transition>
+    <div class="footer">
+      <transition name="fade" mode="out-in">
+        <login-button
+          v-if="!user.connected"
+          logo="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
+          text="Se connecter avec Google"
+          :event="loginWithGoogle"
+        />
+      </transition>
+    </div>
   </div>
 </template>
 
 <script>
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import LoginButton from "./LoginButton.vue";
+import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 
 export default {
   name: "Menu",
+  components: { LoginButton },
   props: ["mapData", "user"],
   methods: {
     loginWithGoogle() {
@@ -40,15 +64,28 @@ export default {
       });
     },
   },
+  computed: {
+    mapPin() {
+      return faMapPin;
+    },
+  },
 };
 </script>
 
 <style lang="scss">
+@media screen and (max-width: 800px) {
+  .menu {
+    width: calc(100% - 60px) !important;
+    height: calc(50vh - 60px) !important;
+    margin-top: 50vh !important;
+  }
+}
+
 .menu {
   height: calc(100% - 75px);
-  width: 20vw;
+  width: 300px;
   background-color: white;
-  border-radius: 25px;
+  border-radius: 15px;
   box-shadow: 0px 3px 7px rgba(0, 0, 0, 0.2);
   padding: 20px;
   position: absolute;
@@ -56,78 +93,115 @@ export default {
   right: 0;
   margin: 10px;
   font-weight: 400;
-}
-
-.g-button {
-  border: 1px solid black;
-  background: black;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.g-logo {
-  width: 21px;
-  height: 21px;
-  padding: 8px 10px;
-  background: white;
-  border-radius: 7px;
-}
-
-.g-text {
-  max-height: 18px;
-  color: white;
   text-align: center;
-  padding-right: 5px;
-  font-weight: 500;
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 75px);
+
+  .header {
+    flex: 0;
+
+    &.connected {
+      display: flex;
+
+      .welcome {
+        flex: 0 0 100px;
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        gap: 15px;
+        font-size: 20px;
+        font-weight: 500;
+
+        div {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+
+          h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 300;
+          }
+
+          h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 500;
+            max-width: 200px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+        }
+      }
+
+      .separator {
+        flex: 1;
+      }
+    }
+  }
+
+  .box {
+    flex: 1;
+  }
+
+  .footer {
+    max-height: 48px;
+    display: flex;
+    justify-content: center;
+  }
 }
 
-.home {
+.profile-picture {
+  border-radius: 100%;
+  width: 144px;
+  height: 144px;
+
+  &.small {
+    width: 72px;
+    height: 72px;
+  }
+
+  &.extra-small {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.box {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  height: 100%;
+  &.home {
+    align-items: flex-start;
+    justify-content: flex-start;
 
-  img {
-    border-radius: 100%;
-    width: 128px;
-    height: 128px;
+    h2 {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      line-height: 12px;
+    }
+
+    h3 {
+      font-size: 1em;
+      font-weight: 300;
+    }
   }
 
-  h2 {
-    font-size: 1.4em;
-    text-align: center;
-    margin-bottom: 10px;
-    line-height: 12px;
-  }
+  &.connexion {
+    h2 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      line-height: 0.8em;
+    }
 
-  h3 {
-    font-size: 1em;
-    font-weight: 300;
-  }
-}
-
-.connexion {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  height: 100%;
-
-  h2 {
-    font-size: 3em;
-    margin-bottom: 10px;
-    line-height: 12px;
-  }
-
-  h3 {
-    font-size: 1em;
-    font-weight: 300;
+    h3 {
+      font-size: 1em;
+      font-weight: 300;
+    }
   }
 }
 

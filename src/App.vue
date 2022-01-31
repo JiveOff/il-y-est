@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Menu :mapData="mapData" :user="user" />
-    <div :class="{ overlay: !user.connected }"></div>
+    <div class="overlay" :class="{ show: !user.connected }"></div>
     <l-map
       style="height: 100%"
       :center="mapData.center"
@@ -93,9 +93,16 @@ body {
 
 .overlay {
   position: absolute;
-  z-index: 5000;
+  z-index: 0;
   width: 100%;
   height: 100%;
+
+  background-color: rgba(0, 0, 0, 0);
+  transition: 0.25s ease-in-out;
+}
+
+.overlay.show {
+  z-index: 5000;
   background-color: rgba(0, 0, 0, 0.5);
 }
 </style>
