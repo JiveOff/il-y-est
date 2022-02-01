@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <map-style-selector :user="user" @changeStyle="changeStyle" />
     <Menu :mapData="mapData" :user="user" />
     <div class="overlay" :class="{ show: !user.connected }"></div>
     <l-map
@@ -32,9 +33,10 @@
 
 <script>
 import { LMap, LTileLayer } from "vue2-leaflet";
-import Menu from "./components/Menu.vue";
-
 import { initializeApp } from "firebase/app";
+
+import Menu from "./components/Menu.vue";
+import MapStyleSelector from "./components/MapStyleSelector.vue";
 
 export default {
   name: "App",
@@ -42,18 +44,29 @@ export default {
     LMap,
     LTileLayer,
     Menu,
+    MapStyleSelector,
   },
   mounted() {
     this.firebase = initializeApp(this.firebaseConfig);
   },
   data() {
-    let defaultCenter = [48.85127481320342, 2.4087524414062504];
+    let defaultCenter = [48.84159496838822, 2.2712731361389165];
+    let here = {
+      apiKey: "_dJS3EWxq3eW-qpShsUesGimvw_SwYO3ZtB3cbC97-E",
+      style: "normal.day.grey",
+    };
+
     return {
+      here,
+
       mapData: {
-        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        url: `https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/${here.style}/{z}/{x}/{y}/512/png8?apiKey=${here.apiKey}&ppi=320`,
         attribution:
-          '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-        zoom: 12,
+          '&copy; HERE 2019 © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        zoom: 16,
+        zoomOffset: -1,
+        zoomSnap: 0.5,
+        tileSize: 512,
         center: defaultCenter,
         defaultCenter,
       },
@@ -74,6 +87,11 @@ export default {
 
       firebase: null,
     };
+  },
+  methods: {
+    changeStyle(style) {
+      this.mapData.url = `https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/${style}/{z}/{x}/{y}/512/png8?apiKey=${this.here.apiKey}&ppi=320`;
+    },
   },
 };
 </script>
