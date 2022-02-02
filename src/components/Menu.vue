@@ -24,7 +24,7 @@
       <div v-if="!user.connected" class="box connexion" key="connexion">
         <div>
           <h2>Il y est</h2>
-          <h3>Application de partage de marqueurs</h3>
+          <h3>Application de partage de points</h3>
         </div>
       </div>
       <div v-else class="box home" key="home" style="margin-top: 1rem">
