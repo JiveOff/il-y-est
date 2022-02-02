@@ -17,25 +17,32 @@
           :url="mapData.url"
           :attribution="mapData.attribution"
         ></l-tile-layer>
+        <l-marker :lat-lng="data.position">
+          <l-icon :icon-anchor="[16, 37]">
+            <img src="../assets/marker.png" />
+          </l-icon>
+        </l-marker>
       </l-map>
     </div>
   </div>
 </template>
 
 <script>
-import { LMap, LTileLayer } from "vue2-leaflet";
+import { LMap, LTileLayer, LMarker, LIcon } from "vue2-leaflet";
 
 export default {
   name: "MapMarker",
   props: ["data", "mapData"],
+  components: {
+    LMap,
+    LTileLayer,
+    LMarker,
+    LIcon,
+  },
   data() {
     return {
       location: "",
     };
-  },
-  components: {
-    LMap,
-    LTileLayer,
   },
   mounted() {
     this.getCityFromCoordinates(this.data.position[0], this.data.position[1]);
