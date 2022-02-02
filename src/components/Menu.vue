@@ -24,17 +24,36 @@
       <div v-if="!user.connected" class="box connexion" key="connexion">
         <div>
           <h2>Il y est</h2>
-          <h3>Application de partage de marqueurs</h3>
+          <h3>Application de partage de points</h3>
         </div>
       </div>
       <div v-else class="box home" key="home" style="margin-top: 1rem">
-        Prochainement...
+        <div class="markers">
+          <MapMarker
+            v-for="marker in user.markers"
+            :key="marker.id"
+            :data="marker"
+            :mapData="mapData"
+          />
+          <original-button
+            class="show-on-small"
+            text="Créer un itinéraire"
+            :disabled="true"
+          />
+        </div>
+        <div class="markers-overlay"></div>
       </div>
     </transition>
-    <div class="footer">
+    <div class="footer" :class="{ 'flex-1': user.connected }">
       <transition name="fade" mode="out-in">
+        <original-button
+          class="hide-on-small"
+          v-if="user.connected"
+          text="Créer un itinéraire"
+          :disabled="true"
+        />
         <login-button
-          v-if="!user.connected"
+          v-else
           logo="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
           text="Se connecter avec Google"
           :event="loginWithGoogle"
@@ -47,12 +66,15 @@
 
 <script>
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import LoginButton from "./LoginButton.vue";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
+
+import LoginButton from "./LoginButton.vue";
+import MapMarker from "./MapMarker.vue";
+import OriginalButton from "./OriginalButton.vue";
 
 export default {
   name: "Menu",
-  components: { LoginButton },
+  components: { LoginButton, MapMarker, OriginalButton },
   props: ["mapData", "user"],
   data: () => ({
     loggingIn: false,
@@ -85,14 +107,19 @@ export default {
 </script>
 
 <style lang="scss">
-@media screen and (max-width: 800px) {
-  .menu {
-    position: absolute;
-    bottom: 0;
-    width: calc(100% - 60px) !important;
-    height: calc(50vh - 60px) !important;
-    max-height: 300px;
-    margin-top: 50vh !important;
+@mixin media-max($_max-width) {
+  @media screen and (max-width: $_max-width) {
+    & {
+      @content;
+    }
+  }
+}
+
+@mixin media-min($_min-width) {
+  @media screen and (min-width: $_min-width) {
+    & {
+      @content;
+    }
   }
 }
 
@@ -113,6 +140,15 @@ export default {
   display: flex;
   flex-direction: column;
   height: calc(100% - 75px);
+
+  @include media-max(800px) {
+    position: absolute;
+    bottom: 0;
+    width: calc(100% - 60px) !important;
+    height: calc(50vh - 60px) !important;
+    max-height: 300px;
+    margin-top: 50vh !important;
+  }
 
   .header {
     flex: 0;
@@ -162,10 +198,28 @@ export default {
   }
 
   .footer {
-    max-height: 48px;
     display: flex;
+    align-items: flex-end;
     justify-content: center;
+    height: 100%;
+    flex: 0;
   }
+}
+
+.hide-on-small {
+  @include media-max(800px) {
+    display: none !important;
+  }
+}
+
+.show-on-small {
+  @include media-min(800px) {
+    display: none !important;
+  }
+}
+
+.flex-1 {
+  flex: 1 !important;
 }
 
 .profile-picture {
@@ -193,6 +247,8 @@ export default {
   &.home {
     align-items: flex-start;
     justify-content: flex-start;
+    max-height: 80%;
+    position: relative;
 
     h2 {
       font-size: 1.4em;
@@ -203,6 +259,38 @@ export default {
     h3 {
       font-size: 1em;
       font-weight: 300;
+    }
+
+    .markers {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: inherit;
+      overflow-y: hidden;
+      width: 100%;
+      overflow-y: scroll;
+      scrollbar-color: rgb(175, 175, 175) white;
+      scrollbar-width: thin;
+      padding-bottom: 25px;
+
+      @include media-max(800px) {
+        padding-bottom: 0;
+      }
+    }
+
+    &:after {
+      content: "";
+      position: absolute;
+      z-index: 6000;
+      bottom: 0;
+      width: 100%;
+      height: 25px;
+      background: linear-gradient(rgba(255, 255, 255, 0.001), white);
+
+      @include media-max(800px) {
+        display: none;
+      }
     }
   }
 
