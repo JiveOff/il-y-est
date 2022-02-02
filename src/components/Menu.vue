@@ -49,6 +49,13 @@
           :loading="loggingIn"
         />
       </transition>
+      <transition name="fade" mode="out-in">
+        <original-button
+          v-if="user.connected"
+          text="Créer un itinéraire"
+          :disabled="true"
+        />
+      </transition>
     </div>
   </div>
 </template>
@@ -59,10 +66,11 @@ import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 
 import LoginButton from "./LoginButton.vue";
 import MapMarker from "./MapMarker.vue";
+import OriginalButton from "./OriginalButton.vue";
 
 export default {
   name: "Menu",
-  components: { LoginButton, MapMarker },
+  components: { LoginButton, MapMarker, OriginalButton },
   props: ["mapData", "user"],
   data: () => ({
     loggingIn: false,
@@ -95,14 +103,11 @@ export default {
 </script>
 
 <style lang="scss">
-@media screen and (max-width: 800px) {
-  .menu {
-    position: absolute;
-    bottom: 0;
-    width: calc(100% - 60px) !important;
-    height: calc(50vh - 60px) !important;
-    max-height: 300px;
-    margin-top: 50vh !important;
+@mixin media-max($_max-width) {
+  @media screen and (max-width: $_max-width) {
+    & {
+      @content;
+    }
   }
 }
 
@@ -123,6 +128,15 @@ export default {
   display: flex;
   flex-direction: column;
   height: calc(100% - 75px);
+
+  @include media-max(800px) {
+    position: absolute;
+    bottom: 0;
+    width: calc(100% - 60px) !important;
+    height: calc(50vh - 60px) !important;
+    max-height: 300px;
+    margin-top: 50vh !important;
+  }
 
   .header {
     flex: 0;
@@ -172,9 +186,10 @@ export default {
   }
 
   .footer {
-    max-height: 48px;
     display: flex;
+    align-items: end;
     justify-content: center;
+    height: 100%;
   }
 }
 
@@ -217,18 +232,6 @@ export default {
       font-weight: 300;
     }
 
-    .markers-overlay {
-      z-index: 6000;
-      background: linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0) 0%,
-        #ffffff 100%
-      );
-      width: 100%;
-      height: 50px;
-      margin-top: -35px;
-    }
-
     .markers {
       position: relative;
       display: flex;
@@ -240,7 +243,21 @@ export default {
       overflow-y: scroll;
       scrollbar-color: rgb(175, 175, 175) white;
       scrollbar-width: thin;
-      padding-bottom: 30px;
+      padding-bottom: 25px;
+
+      @include media-max(800px) {
+        padding-bottom: 0;
+      }
+    }
+
+    &:after {
+      content: "";
+      position: absolute;
+      z-index: 6000;
+      bottom: 0;
+      width: 300px;
+      height: 25px;
+      background: linear-gradient(rgba(255, 255, 255, 0.001), white);
     }
   }
 

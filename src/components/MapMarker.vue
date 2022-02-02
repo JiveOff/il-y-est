@@ -54,20 +54,32 @@ export default {
 </script>
 
 <style lang="scss">
+@mixin media-max($_max-width) {
+  @media screen and (max-width: $_max-width) {
+    & {
+      @content;
+    }
+  }
+}
+
 .marker-box {
   display: block;
   width: calc(100% - 5px);
   height: 150px;
 
+  @include media-max(800px) {
+    height: 100px;
+  }
+
   .map {
-    height: 150px;
+    height: inherit;
     width: 100%;
     border-radius: 15px;
   }
 
   .data {
     display: block;
-    height: 150px;
+    height: inherit;
     width: inherit;
     position: absolute;
     z-index: 5999;
