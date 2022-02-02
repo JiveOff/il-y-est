@@ -74,6 +74,38 @@ export default {
       user: {
         connected: false,
         profile: null,
+        markers: [
+          {
+            id: 1,
+            name: "Eiffel Tower",
+            position: [48.85837, 2.29448],
+          },
+          {
+            id: 2,
+            name: "Fontenay",
+            position: [48.85837, 2.49448],
+          },
+          {
+            id: 3,
+            name: "Some place",
+            position: [48.4837, 2.19448],
+          },
+          {
+            id: 4,
+            name: "Morgan's place",
+            position: [51.5081157, -0.078138],
+          },
+          {
+            id: 5,
+            name: "Some place",
+            position: [48.4837, 2.19448],
+          },
+          {
+            id: 6,
+            name: "Morgan's place",
+            position: [51.5081157, -0.078138],
+          },
+        ],
       },
 
       firebaseConfig: {

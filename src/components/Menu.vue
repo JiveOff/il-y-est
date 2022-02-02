@@ -28,7 +28,15 @@
         </div>
       </div>
       <div v-else class="box home" key="home" style="margin-top: 1rem">
-        Prochainement...
+        <div class="markers">
+          <MapMarker
+            v-for="marker in user.markers"
+            :key="marker.id"
+            :data="marker"
+            :mapData="mapData"
+          />
+        </div>
+        <div class="markers-overlay"></div>
       </div>
     </transition>
     <div class="footer">
@@ -47,12 +55,14 @@
 
 <script>
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import LoginButton from "./LoginButton.vue";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
+
+import LoginButton from "./LoginButton.vue";
+import MapMarker from "./MapMarker.vue";
 
 export default {
   name: "Menu",
-  components: { LoginButton },
+  components: { LoginButton, MapMarker },
   props: ["mapData", "user"],
   data: () => ({
     loggingIn: false,
@@ -193,6 +203,8 @@ export default {
   &.home {
     align-items: flex-start;
     justify-content: flex-start;
+    max-height: 80%;
+    position: relative;
 
     h2 {
       font-size: 1.4em;
@@ -203,6 +215,32 @@ export default {
     h3 {
       font-size: 1em;
       font-weight: 300;
+    }
+
+    .markers-overlay {
+      z-index: 6000;
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        #ffffff 100%
+      );
+      width: 100%;
+      height: 50px;
+      margin-top: -35px;
+    }
+
+    .markers {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: inherit;
+      overflow-y: hidden;
+      width: 100%;
+      overflow-y: scroll;
+      scrollbar-color: rgb(175, 175, 175) white;
+      scrollbar-width: thin;
+      padding-bottom: 30px;
     }
   }
 
