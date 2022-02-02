@@ -1,7 +1,7 @@
 <template>
   <button
     class="button"
-    :class="{ disabled }"
+    :class="{ disabled, ...classes }"
     @click="event"
     :disabled="loading || disabled"
   >
@@ -22,7 +22,7 @@ import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
 export default {
   name: "Button",
-  props: ["logo", "text", "event", "loading", "disabled"],
+  props: ["logo", "text", "event", "loading", "disabled", "classes"],
   computed: {
     circle() {
       return faCircleNotch;

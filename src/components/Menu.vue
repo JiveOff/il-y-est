@@ -35,11 +35,16 @@
             :data="marker"
             :mapData="mapData"
           />
+          <original-button
+            class="show-on-small"
+            text="Créer un itinéraire"
+            :disabled="true"
+          />
         </div>
         <div class="markers-overlay"></div>
       </div>
     </transition>
-    <div class="footer">
+    <div class="footer" :class="{ 'flex-1': user.connected }">
       <transition name="fade" mode="out-in">
         <login-button
           v-if="!user.connected"
@@ -51,6 +56,7 @@
       </transition>
       <transition name="fade" mode="out-in">
         <original-button
+          class="hide-on-small"
           v-if="user.connected"
           text="Créer un itinéraire"
           :disabled="true"
@@ -105,6 +111,14 @@ export default {
 <style lang="scss">
 @mixin media-max($_max-width) {
   @media screen and (max-width: $_max-width) {
+    & {
+      @content;
+    }
+  }
+}
+
+@mixin media-min($_min-width) {
+  @media screen and (min-width: $_min-width) {
     & {
       @content;
     }
@@ -187,10 +201,27 @@ export default {
 
   .footer {
     display: flex;
-    align-items: end;
+    align-items: flex-end;
     justify-content: center;
     height: 100%;
+    flex: 0;
   }
+}
+
+.hide-on-small {
+  @include media-max(800px) {
+    display: none !important;
+  }
+}
+
+.show-on-small {
+  @include media-min(800px) {
+    display: none !important;
+  }
+}
+
+.flex-1 {
+  flex: 1 !important;
 }
 
 .profile-picture {
@@ -255,9 +286,13 @@ export default {
       position: absolute;
       z-index: 6000;
       bottom: 0;
-      width: 300px;
+      width: 100%;
       height: 25px;
       background: linear-gradient(rgba(255, 255, 255, 0.001), white);
+
+      @include media-max(800px) {
+        display: none;
+      }
     }
   }
 
