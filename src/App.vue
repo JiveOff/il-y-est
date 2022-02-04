@@ -3,7 +3,21 @@
     <map-style-selector :user="user" @changeStyle="changeStyle" />
     <Menu :mapData="mapData" :user="user" />
     <div class="overlay" :class="{ show: !user.connected }"></div>
+    <div class="popup" :class="{ show: user.showPopup }">
+      <div class="content">
+        <h1>Donne un ptit' nom à ton marqueur ;)</h1>
+        <input
+          type="text"
+          name=""
+          id=""
+          placeholder="Mon super point trop sympa"
+        />
+        <br />
+        <button>Enregistrer</button>
+      </div>
+    </div>
     <l-map
+      @click="user.showPopup = true"
       style="height: 100%"
       :center="mapData.center"
       :zoom="mapData.zoom"
@@ -27,12 +41,23 @@
         :url="mapData.url"
         :attribution="mapData.attribution"
       ></l-tile-layer>
+      <div v-if="user.connected">
+        <l-marker
+          v-for="marker in user.markers"
+          :key="marker.id"
+          :lat-lng="marker.position"
+        >
+          <l-icon :icon-anchor="[16, 37]">
+            <img src="~@/assets/marker.png" />
+          </l-icon>
+        </l-marker>
+      </div>
     </l-map>
   </div>
 </template>
 
 <script>
-import { LMap, LTileLayer } from "vue2-leaflet";
+import { LMap, LTileLayer, LMarker, LIcon } from "vue2-leaflet";
 import { initializeApp } from "firebase/app";
 
 import Menu from "./components/Menu.vue";
@@ -43,6 +68,8 @@ export default {
   components: {
     LMap,
     LTileLayer,
+    LMarker,
+    LIcon,
     Menu,
     MapStyleSelector,
   },
@@ -73,6 +100,7 @@ export default {
 
       user: {
         connected: false,
+        showPopup: false,
         profile: null,
         markers: [
           {
@@ -131,6 +159,14 @@ export default {
 <style lang="scss">
 @import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500&display=swap");
 
+@mixin media-max($_max-width) {
+  @media screen and (max-width: $_max-width) {
+    & {
+      @content;
+    }
+  }
+}
+
 #app {
   height: 100vh;
 }
@@ -154,5 +190,72 @@ body {
 .overlay.show {
   z-index: 5000;
   background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popup {
+  position: absolute;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+
+  background-color: rgba(0, 0, 0, 0);
+  transition: 0.25s ease-in-out;
+
+  .content {
+    position: absolute;
+    margin: auto;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 80%;
+    height: 190px;
+    background-color: #ffffff;
+    border-radius: 15px;
+    text-align: center;
+
+    @include media-max(800px) {
+      width: 90%;
+      height: 220px;
+    }
+
+    input {
+      width: 80%;
+      outline: 0;
+      border-width: 0 0 2px;
+      border-color: #333;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    button {
+      border: 0;
+      color: #ffffff;
+      background: black;
+      border-radius: 10px;
+      cursor: pointer;
+
+      height: 46px;
+      padding: 10px;
+      margin: 15px;
+
+      width: 30%;
+      color: white;
+      text-align: center;
+
+      font-family: "Rubik", sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+
+      @include media-max(800px) {
+        width: 90%;
+      }
+    }
+  }
+}
+
+.popup.show {
+  z-index: 10000;
+  background-color: rgba(180, 180, 180, 0.6);
 }
 </style>
