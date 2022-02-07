@@ -1,5 +1,5 @@
 <template>
-  <div class="marker-box">
+  <div class="marker-box" @click="centerToMarker">
     <div class="data">
       <div class="info">
         <span class="location">{{ location }}</span>
@@ -56,6 +56,9 @@ export default {
           this.location = data.location;
         });
     },
+    centerToMarker() {
+      this.mapData.center = this.data.position;
+    },
   },
 };
 </script>
@@ -73,6 +76,7 @@ export default {
   display: block;
   width: calc(100% - 5px);
   height: 150px;
+  cursor: pointer;
 
   @include media-max(800px) {
     height: 100px;

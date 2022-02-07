@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <map-style-selector :user="user" @changeStyle="changeStyle" />
-    <Menu :mapData="mapData" :user="user" />
+    <Menu :mapData="mapData" :user="user" @login="loginWithGoogle" />
     <div class="overlay" :class="{ show: !user.connected }"></div>
     <div class="popup" :class="{ show: user.showPopup }">
       <div class="content">
@@ -58,10 +58,12 @@
 
 <script>
 import { LMap, LTileLayer, LMarker, LIcon } from "vue2-leaflet";
-import { initializeApp } from "firebase/app";
 
 import Menu from "./components/Menu.vue";
 import MapStyleSelector from "./components/MapStyleSelector.vue";
+
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "@firebase/auth";
+import { getFirestore, query, collection, getDocs } from "@firebase/firestore";
 
 export default {
   name: "App",
@@ -72,9 +74,6 @@ export default {
     LIcon,
     Menu,
     MapStyleSelector,
-  },
-  mounted() {
-    this.firebase = initializeApp(this.firebaseConfig);
   },
   data() {
     let defaultCenter = [48.84159496838822, 2.2712731361389165];
@@ -99,6 +98,7 @@ export default {
       },
 
       user: {
+        loggingIn: false,
         connected: false,
         showPopup: false,
         profile: null,
@@ -133,24 +133,47 @@ export default {
             name: "Morgan's place",
             position: [51.5081157, -0.078138],
           },
+          {
+            id: 7,
+            name: "a",
+            position: [55.5081157, -0.178138],
+          },
         ],
       },
-
-      firebaseConfig: {
-        apiKey: "AIzaSyAwvesInUD79dm95pQrV5_TGAwWAlGsUhE",
-        authDomain: "pwebc-il-y-est.firebaseapp.com",
-        projectId: "pwebc-il-y-est",
-        storageBucket: "pwebc-il-y-est.appspot.com",
-        messagingSenderId: "411497655460",
-        appId: "1:411497655460:web:875baa2a699834e1944a31",
-      },
-
-      firebase: null,
     };
   },
   methods: {
     changeStyle(style) {
       this.mapData.url = `https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/${style}/{z}/{x}/{y}/512/png8?apiKey=${this.here.apiKey}&ppi=320`;
+    },
+    async loginWithGoogle() {
+      this.user.loggingIn = true;
+      const provider = new GoogleAuthProvider();
+      const auth = getAuth(this.$firebase);
+
+      signInWithPopup(auth, provider)
+        .then(async (result) => {
+          this.user.connected = true;
+          this.user.loggingIn = false;
+          this.user.profile = result.user;
+
+          const firestore = await getFirestore(this.$firebase);
+          const markersQuery = query(collection(firestore, "markers"));
+          const querySnapshot = await getDocs(markersQuery);
+
+          this.user.markers = querySnapshot.docs().map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          this.user.loggingIn = false;
+        });
     },
   },
 };
