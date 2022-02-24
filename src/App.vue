@@ -2,22 +2,30 @@
   <div id="app">
     <map-style-selector :user="user" @changeStyle="changeStyle" />
     <Menu :mapData="mapData" :user="user" @login="loginWithGoogle" />
-    <div class="overlay" :class="{ show: !user.connected }"></div>
-    <div class="popup" :class="{ show: user.showPopup }">
+    <div
+      class="overlay"
+      :class="{
+        show: !user.connected || user.showPopup,
+        index: user.showPopup,
+      }"
+      @click="user.showPopup = false"
+    ></div>
+    <div v-if="user.showPopup" class="popup">
       <div class="content">
-        <h1>Donne un ptit' nom à ton marqueur ;)</h1>
+        <h1>{{ markerLocation || "..." }}</h1>
         <input
           type="text"
           name=""
           id=""
-          placeholder="Mon super point trop sympa"
+          placeholder="Donnez un nom à votre marqueur"
+          v-model="markerName"
+          @keyup.enter="addMarker"
         />
         <br />
-        <button>Enregistrer</button>
       </div>
     </div>
     <l-map
-      @click="user.showPopup = true"
+      @click="openPopup"
       style="height: 100%"
       :center="mapData.center"
       :zoom="mapData.zoom"
@@ -97,6 +105,10 @@ export default {
         defaultCenter,
       },
 
+      markerName: "",
+      markerPosition: null,
+      markerLocation: null,
+
       user: {
         loggingIn: false,
         connected: false,
@@ -105,38 +117,13 @@ export default {
         markers: [
           {
             id: 1,
-            name: "Eiffel Tower",
+            name: "Tour Eiffel",
             position: [48.85837, 2.29448],
           },
           {
             id: 2,
             name: "Fontenay",
             position: [48.85837, 2.49448],
-          },
-          {
-            id: 3,
-            name: "Some place",
-            position: [48.4837, 2.19448],
-          },
-          {
-            id: 4,
-            name: "Morgan's place",
-            position: [51.5081157, -0.078138],
-          },
-          {
-            id: 5,
-            name: "Some place",
-            position: [48.4837, 2.19448],
-          },
-          {
-            id: 6,
-            name: "Morgan's place",
-            position: [51.5081157, -0.078138],
-          },
-          {
-            id: 7,
-            name: "a",
-            position: [55.5081157, -0.178138],
           },
         ],
       },
@@ -174,6 +161,44 @@ export default {
         .finally(() => {
           this.user.loggingIn = false;
         });
+    },
+    getCityFromCoordinates(lat, lng) {
+      let url = `api/getCityFromCoordinates?lat=${lat}&lon=${lng}`;
+      return fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          return (
+            data.address.charAt(0).toUpperCase() +
+            data.address.slice(1) +
+            ", " +
+            data.location
+          );
+        });
+    },
+    async openPopup(e) {
+      this.markerPosition = [e.latlng.lat, e.latlng.lng];
+      this.user.showPopup = true;
+      this.markerLocation = "...";
+      this.markerLocation = await this.getCityFromCoordinates(
+        e.latlng.lat,
+        e.latlng.lng
+      );
+    },
+    addMarker() {
+      if (!this.user.connected) {
+        return;
+      }
+
+      const marker = {
+        id: Date.now(),
+        name: this.markerName,
+        position: this.markerPosition,
+      };
+
+      this.markerName = "";
+      this.user.showPopup = false;
+
+      this.user.markers.push(marker);
     },
   },
 };
@@ -215,17 +240,19 @@ body {
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-.popup {
-  position: absolute;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
+.index {
+  z-index: 10001 !important;
+}
 
+.popup {
   background-color: rgba(0, 0, 0, 0);
   transition: 0.25s ease-in-out;
 
   .content {
+    color: #fff;
+
     position: absolute;
+    z-index: 10001;
     margin: auto;
     top: 0;
     right: 0;
@@ -233,52 +260,24 @@ body {
     left: 0;
     width: 80%;
     height: 190px;
-    background-color: #ffffff;
     border-radius: 15px;
     text-align: center;
 
     @include media-max(800px) {
       width: 90%;
-      height: 220px;
+      height: 65vh;
     }
 
     input {
       width: 80%;
       outline: 0;
       border-width: 0 0 2px;
-      border-color: #333;
+      border-color: #fff;
+      color: #fff;
       text-align: center;
       font-size: 24px;
-    }
-
-    button {
-      border: 0;
-      color: #ffffff;
-      background: black;
-      border-radius: 10px;
-      cursor: pointer;
-
-      height: 46px;
-      padding: 10px;
-      margin: 15px;
-
-      width: 30%;
-      color: white;
-      text-align: center;
-
-      font-family: "Rubik", sans-serif;
-      font-weight: 500;
-      font-size: 14px;
-
-      @include media-max(800px) {
-        width: 90%;
-      }
+      background-color: rgba(0, 0, 0, 0);
     }
   }
-}
-
-.popup.show {
-  z-index: 10000;
-  background-color: rgba(180, 180, 180, 0.6);
 }
 </style>

@@ -1,3 +1,4 @@
++
 <template>
   <div class="menu">
     <transition name="fade" mode="out-in">
@@ -56,8 +57,8 @@
           v-else
           logo="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
           text="Se connecter avec Google"
-          :event="login"
-          :loading="user.loggingIn"
+          :event="loginWithGoogle"
+          :loading="loggingIn"
         />
       </transition>
     </div>
@@ -65,6 +66,7 @@
 </template>
 
 <script>
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 
 import LoginButton from "./LoginButton.vue";
@@ -75,14 +77,31 @@ export default {
   name: "Menu",
   components: { LoginButton, MapMarker, OriginalButton },
   props: ["mapData", "user"],
+  data: () => ({
+    loggingIn: false,
+  }),
+  methods: {
+    loginWithGoogle() {
+      this.loggingIn = true;
+      const provider = new GoogleAuthProvider();
+      const auth = getAuth();
+
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          this.user.connected = true;
+          this.user.profile = result.user;
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+          this.loggingIn = false;
+        });
+    },
+  },
   computed: {
     mapPin() {
       return faMapPin;
-    },
-  },
-  methods: {
-    login() {
-      this.$emit("login");
     },
   },
 };
@@ -231,6 +250,7 @@ export default {
     justify-content: flex-start;
     max-height: 80%;
     position: relative;
+    text-align: left;
 
     h2 {
       font-size: 1.4em;
