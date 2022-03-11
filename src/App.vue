@@ -1,7 +1,12 @@
 <template>
   <div id="app">
     <map-style-selector :user="user" @changeStyle="changeStyle" />
-    <Menu :mapData="mapData" :user="user" @login="loginWithGoogle" />
+    <Menu
+      :mapData="mapData"
+      :user="user"
+      @login="loginWithGoogle"
+      @refreshMarkers="refreshMarkers"
+    />
     <div
       class="overlay"
       :class="{
@@ -49,11 +54,23 @@
         :url="mapData.url"
         :attribution="mapData.attribution"
       ></l-tile-layer>
+      <routing
+        v-if="routeTo"
+        :waypoints="routeTo"
+        :routeWhileDragging="false"
+        :autoRoute="false"
+      ></routing>
+      <l-marker v-if="routeTo" :lat-lng="routeTo[0]">
+        <l-icon :icon-anchor="[16, 37]">
+          <img src="~@/assets/marker.png" style="filter: invert()" />
+        </l-icon>
+      </l-marker>
       <div v-if="user.connected">
         <l-marker
           v-for="marker in user.markers"
           :key="marker.id"
           :lat-lng="marker.position"
+          @click="routingTo(marker.position)"
         >
           <l-icon :icon-anchor="[16, 37]">
             <img src="~@/assets/marker.png" />
@@ -70,8 +87,8 @@ import { LMap, LTileLayer, LMarker, LIcon } from "vue2-leaflet";
 import Menu from "./components/Menu.vue";
 import MapStyleSelector from "./components/MapStyleSelector.vue";
 
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "@firebase/auth";
-import { getFirestore, query, collection, getDocs } from "@firebase/firestore";
+import { supabase } from "./plugins/supabase";
+import Routing from "./components/Routing.vue";
 
 export default {
   name: "App",
@@ -82,6 +99,7 @@ export default {
     LIcon,
     Menu,
     MapStyleSelector,
+    Routing,
   },
   data() {
     let defaultCenter = [48.84159496838822, 2.2712731361389165];
@@ -109,25 +127,27 @@ export default {
       markerPosition: null,
       markerLocation: null,
 
+      routeTo: null,
+
       user: {
         loggingIn: false,
         connected: false,
         showPopup: false,
         profile: null,
-        markers: [
-          {
-            id: 1,
-            name: "Tour Eiffel",
-            position: [48.85837, 2.29448],
-          },
-          {
-            id: 2,
-            name: "Fontenay",
-            position: [48.85837, 2.49448],
-          },
-        ],
+        markers: [],
       },
     };
+  },
+  async mounted() {
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN") {
+        this.user.loggingIn = true;
+        await this.refreshMarkers();
+        this.user.connected = true;
+        this.user.profile = session.user.user_metadata;
+        this.user.loggingIn = false;
+      }
+    });
   },
   methods: {
     changeStyle(style) {
@@ -135,32 +155,15 @@ export default {
     },
     async loginWithGoogle() {
       this.user.loggingIn = true;
-      const provider = new GoogleAuthProvider();
-      const auth = getAuth(this.$firebase);
 
-      signInWithPopup(auth, provider)
-        .then(async (result) => {
-          this.user.connected = true;
-          this.user.loggingIn = false;
-          this.user.profile = result.user;
+      const { error } = await supabase.auth.signIn({
+        provider: "google",
+      });
 
-          const firestore = await getFirestore(this.$firebase);
-          const markersQuery = query(collection(firestore, "markers"));
-          const querySnapshot = await getDocs(markersQuery);
-
-          this.user.markers = querySnapshot.docs().map((doc) => {
-            return {
-              id: doc.id,
-              ...doc.data(),
-            };
-          });
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          this.user.loggingIn = false;
-        });
+      if (error) {
+        console.error(error);
+        return;
+      }
     },
     getCityFromCoordinates(lat, lng) {
       let url = `api/getCityFromCoordinates?lat=${lat}&lon=${lng}`;
@@ -178,19 +181,65 @@ export default {
     async openPopup(e) {
       this.markerPosition = [e.latlng.lat, e.latlng.lng];
       this.user.showPopup = true;
-      this.markerLocation = "...";
+      this.markerLocation = "";
       this.markerLocation = await this.getCityFromCoordinates(
         e.latlng.lat,
         e.latlng.lng
       );
     },
-    addMarker() {
+    async routingTo(position) {
+      if (!("geolocation" in navigator)) return;
+
+      let getPosition = (options) => {
+        return new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, options)
+        );
+      };
+
+      try {
+        let pos = await getPosition({
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0,
+        });
+
+        this.routeTo = [
+          { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          { lat: position[0], lng: position[1] },
+        ];
+      } catch (e) {
+        console.error(e);
+      }
+
+      // this.routeTo = [
+      //   { lat: 38.7436056, lng: -9.2304153 },
+      //   { lat: position[0], lng: position[1] },
+      // ];
+    },
+    async refreshMarkers() {
+      const { data, error } = await supabase.from("markers").select();
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      this.user.markers = [];
+
+      for (let i in data) {
+        this.user.markers.push({
+          id: data[i].id,
+          name: data[i].name,
+          position: JSON.parse(data[i].position),
+        });
+      }
+    },
+    async addMarker() {
       if (!this.user.connected) {
         return;
       }
 
       const marker = {
-        id: Date.now(),
         name: this.markerName,
         position: this.markerPosition,
       };
@@ -198,7 +247,12 @@ export default {
       this.markerName = "";
       this.user.showPopup = false;
 
-      this.user.markers.push(marker);
+      const { error } = await supabase.from("markers").insert([marker]);
+      if (error) {
+        console.error(error);
+      }
+
+      this.refreshMarkers();
     },
   },
 };
@@ -223,6 +277,10 @@ body {
   margin: 0;
   font-family: "Rubik", sans-serif;
   font-weight: 300;
+}
+
+.leaflet-routing-container {
+  display: none;
 }
 
 .overlay {
@@ -278,6 +336,18 @@ body {
       font-size: 24px;
       background-color: rgba(0, 0, 0, 0);
     }
+  }
+}
+
+svg {
+  stroke-dasharray: 1604;
+  stroke-dashoffset: 1604;
+  animation: dash 5s ease-in-out forwards;
+}
+
+@keyframes dash {
+  100% {
+    stroke-dashoffset: 0;
   }
 }
 </style>

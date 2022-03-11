@@ -1,12 +1,17 @@
 <template>
-  <div class="marker-box" @click="centerToMarker">
+  <div class="marker-box">
+    <div class="delete">
+      <h3 class="btn">
+        <font-awesome-icon @click="deleteMarker" :icon="trashCan" size="1x" />
+      </h3>
+    </div>
     <div class="data">
       <div class="info">
         <span class="location">{{ location }}</span>
         <span class="name">{{ data.name }}</span>
       </div>
     </div>
-    <div class="map">
+    <div class="map" @click="centerToMarker">
       <l-map
         class="map"
         style="height: 100%"
@@ -29,6 +34,7 @@
 
 <script>
 import { LMap, LTileLayer, LMarker, LIcon } from "vue2-leaflet";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 export default {
   name: "MapMarker",
@@ -44,6 +50,11 @@ export default {
       location: "",
     };
   },
+  computed: {
+    trashCan() {
+      return faTrash;
+    },
+  },
   mounted() {
     this.getCityFromCoordinates(this.data.position[0], this.data.position[1]);
   },
@@ -58,6 +69,9 @@ export default {
     },
     centerToMarker() {
       this.mapData.center = this.data.position;
+    },
+    deleteMarker() {
+      this.$emit("delete");
     },
   },
 };
@@ -86,6 +100,19 @@ export default {
     height: inherit;
     width: 100%;
     border-radius: 15px;
+  }
+
+  .delete {
+    display: block;
+    right: 20px;
+    left: 20px;
+    position: absolute;
+    z-index: 6000;
+
+    .btn {
+      text-align: right;
+      color: black;
+    }
   }
 
   .data {

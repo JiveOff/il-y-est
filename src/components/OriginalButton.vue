@@ -6,7 +6,7 @@
     :disabled="loading || disabled"
   >
     <div v-if="loading" class="loading">
-      <font-awesome-icon :icon="circle" size="2x" />
+      <font-awesome-icon :icon="circle" size="l" />
     </div>
     <div v-else>
       <div v-if="logo" class="logo">
