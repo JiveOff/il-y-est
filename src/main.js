@@ -1,7 +1,8 @@
 import Vue from "vue";
 import App from "./App.vue";
 
-import "leaflet/dist/leaflet.css";
+import "./plugins/vue2-leaflet";
+
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { ToggleButton } from "vue-js-toggle-button";
 

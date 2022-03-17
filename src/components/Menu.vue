@@ -9,13 +9,13 @@
           <font-awesome-icon :icon="mapPin" size="2x" />
           <div>
             <h3>Bienvenue,</h3>
-            <h2>{{ user.profile.displayName }}</h2>
+            <h2>{{ user.profile.name }}</h2>
           </div>
         </div>
         <div class="separator"></div>
         <img
           class="profile-picture extra-small"
-          :src="user.profile.photoURL"
+          :src="user.profile.picture"
           alt="Photo de profil"
         />
       </div>
@@ -34,6 +34,7 @@
             :key="marker.id"
             :data="marker"
             :mapData="mapData"
+            @delete="deleteMarker(marker.id)"
           />
           <original-button
             class="show-on-small"
@@ -57,7 +58,7 @@
           logo="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/157px-Google_%22G%22_Logo.svg.png"
           text="Se connecter avec Google"
           :event="loginWithGoogle"
-          :loading="loggingIn"
+          :loading="user.loggingIn"
         />
       </transition>
     </div>
@@ -65,37 +66,31 @@
 </template>
 
 <script>
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 
 import LoginButton from "./LoginButton.vue";
 import MapMarker from "./MapMarker.vue";
 import OriginalButton from "./OriginalButton.vue";
+import { supabase } from "../plugins/supabase";
 
 export default {
   name: "Menu",
   components: { LoginButton, MapMarker, OriginalButton },
   props: ["mapData", "user"],
-  data: () => ({
-    loggingIn: false,
-  }),
   methods: {
     loginWithGoogle() {
-      this.loggingIn = true;
-      const provider = new GoogleAuthProvider();
-      const auth = getAuth();
-
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          this.user.connected = true;
-          this.user.profile = result.user;
-        })
-        .catch((error) => {
-          console.error(error);
-        })
-        .finally(() => {
-          this.loggingIn = false;
-        });
+      this.$emit("login");
+    },
+    async deleteMarker(id) {
+      let { data, error } = await supabase
+        .from("markers")
+        .delete()
+        .match({ id });
+      if (error) {
+        console.error(error);
+        return;
+      }
+      this.$emit("refreshMarkers");
     },
   },
   computed: {
@@ -183,6 +178,7 @@ export default {
             max-width: 200px;
             text-overflow: ellipsis;
             overflow: hidden;
+            text-align: initial;
           }
         }
       }
@@ -249,6 +245,7 @@ export default {
     justify-content: flex-start;
     max-height: 80%;
     position: relative;
+    text-align: left;
 
     h2 {
       font-size: 1.4em;
